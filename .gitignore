@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Vector store + cached image crops — rebuildable from build_index.py
+chroma_db/
+data/images/
+data/crops/
+*.npy
+
+# Model weights / HF cache live outside the repo (D:\hf-cache)

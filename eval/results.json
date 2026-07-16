@@ -1,0 +1,146 @@
+{
+ "vanilla CLIP (global only)": {
+  "backbone": "vanilla-clip",
+  "use_regions": false,
+  "queries": {
+   "A person in a bright yellow raincoat.": [
+    "34983",
+    "coco_340451",
+    "41132",
+    "22345",
+    "17440"
+   ],
+   "Professional business attire inside a modern office.": [
+    "30408",
+    "48146",
+    "46581",
+    "coco_367095",
+    "coco_9483"
+   ],
+   "Someone wearing a blue shirt sitting on a park bench.": [
+    "coco_506454",
+    "coco_87144",
+    "coco_517069",
+    "coco_349184",
+    "coco_566436"
+   ],
+   "Casual weekend outfit for a city walk.": [
+    "39038",
+    "45989",
+    "10973",
+    "16046",
+    "39192"
+   ],
+   "A red tie and a white shirt in a formal setting.": [
+    "30363",
+    "coco_172877",
+    "30408",
+    "6953",
+    "46730"
+   ]
+  },
+  "swap_overlaps": [
+   0.2,
+   0.8,
+   1.0,
+   0.6
+  ],
+  "mean_swap_overlap": 0.65
+ },
+ "FashionSigLIP (global only)": {
+  "backbone": "fashion-siglip",
+  "use_regions": false,
+  "queries": {
+   "A person in a bright yellow raincoat.": [
+    "coco_340451",
+    "17102",
+    "6619",
+    "8873",
+    "coco_212573"
+   ],
+   "Professional business attire inside a modern office.": [
+    "coco_170099",
+    "coco_367095",
+    "7709",
+    "coco_271116",
+    "47651"
+   ],
+   "Someone wearing a blue shirt sitting on a park bench.": [
+    "coco_454404",
+    "982",
+    "coco_517069",
+    "6675",
+    "coco_87144"
+   ],
+   "Casual weekend outfit for a city walk.": [
+    "10111",
+    "33537",
+    "24078",
+    "32633",
+    "44803"
+   ],
+   "A red tie and a white shirt in a formal setting.": [
+    "33240",
+    "43348",
+    "44822",
+    "25744",
+    "coco_32901"
+   ]
+  },
+  "swap_overlaps": [
+   0.8,
+   0.0,
+   0.6,
+   0.6
+  ],
+  "mean_swap_overlap": 0.5
+ },
+ "FashionSigLIP + regions": {
+  "backbone": "fashion-siglip",
+  "use_regions": true,
+  "queries": {
+   "A person in a bright yellow raincoat.": [
+    "coco_340451",
+    "17102",
+    "6619",
+    "8873",
+    "coco_212573"
+   ],
+   "Professional business attire inside a modern office.": [
+    "coco_170099",
+    "coco_367095",
+    "7709",
+    "coco_271116",
+    "44574"
+   ],
+   "Someone wearing a blue shirt sitting on a park bench.": [
+    "coco_454404",
+    "coco_517069",
+    "6675",
+    "coco_87144",
+    "coco_566436"
+   ],
+   "Casual weekend outfit for a city walk.": [
+    "33537",
+    "24078",
+    "32633",
+    "16154",
+    "22469"
+   ],
+   "A red tie and a white shirt in a formal setting.": [
+    "25744",
+    "27531",
+    "43348",
+    "44822",
+    "33304"
+   ]
+  },
+  "swap_overlaps": [
+   0.4,
+   0.0,
+   0.6,
+   0.2
+  ],
+  "mean_swap_overlap": 0.3
+ }
+}

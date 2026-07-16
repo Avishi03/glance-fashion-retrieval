@@ -1,0 +1,11 @@
+# Install torch separately first (CUDA build, not on PyPI default index):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+
+transformers>=4.44
+open_clip_torch>=2.24      # loads Marqo/marqo-fashionSigLIP
+chromadb>=1.0              # vector store
+datasets>=3.0              # Fashionpedia loader
+pillow>=10.0
+numpy>=1.26
+matplotlib>=3.8            # ablation / stress-test charts
+tqdm>=4.66
