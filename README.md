@@ -188,7 +188,43 @@ pip install -r requirements.txt
 python data/prepare.py           # stratified Fashionpedia sample
 python data/prepare_coco.py      # COCO scene top-up
 python -m indexer.build_index --backbone fashion-siglip
-python -m eval.run_eval
+```
+
+### Search
+
+`query.py` is the Part B entrypoint — it takes a natural-language string and
+returns the top-k images:
+
+```bash
+python query.py "A red tie and a white shirt in a formal setting." --k 5
+python query.py "a burnt sienna windbreaker" --show
+python query.py "a blue shirt in a park" --backbone vanilla-clip --no-regions
+```
+
+It prints the clause decomposition alongside the results, so routing decisions
+are inspectable:
+
+```
+decomposition:
+   [garment] 'A red tie'            (routing margin +0.0426)
+   [garment] 'a white shirt'        (routing margin +0.0724)
+   [scene  ] 'in a formal setting'  (routing margin +0.0177)
+```
+
+`--backbone` / `--no-regions` make the ablation reproducible from the CLI: run
+the same query through vanilla CLIP and through the region system and compare.
+
+**Zero-shot**: `"a burnt sienna windbreaker"` returns three burnt-orange
+outerwear images. Neither "burnt sienna" nor "windbreaker" appears anywhere in
+this codebase — routing is a similarity comparison against role anchors, so the
+vocabulary is whatever the backbone knows.
+
+### Reproduce the evaluation
+
+```bash
+python -m eval.run_eval          # ablation + swap test
+python -m eval.contact_sheet     # look at what it actually returns
+python make_report.py            # regenerate the PDF
 ```
 
 ## Layout

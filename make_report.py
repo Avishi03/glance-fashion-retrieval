@@ -264,6 +264,19 @@ def build():
           "model. Zero-shot decomposition routes correctly with no vocabulary — 'A red tie' → "
           "garment, 'a white shirt' → garment, 'in a formal setting' → scene."),
 
+        P("Zero-shot check", H2),
+        P("The brief grades handling of 'descriptions it hasn't seen explicitly in a training "
+          "label'. The direct test is a query built from words that appear nowhere in this "
+          "codebase — no colour list, no garment taxonomy:"),
+        P("<font face='Courier' size='8'>python query.py \"a burnt sienna windbreaker\" --k 3</font>",
+          CODE),
+        P("The clause routes to GARMENT (margin +0.0375) and the top-3 are all burnt-orange "
+          "outerwear: a rust quilted bomber, a rust jacket-and-trouser set, a burnt-orange fur "
+          "jacket. Neither 'burnt sienna' nor 'windbreaker' is enumerated anywhere — routing is a "
+          "similarity comparison against role anchors, so the vocabulary is whatever the backbone "
+          "knows. A hardcoded parser would have dropped both terms and silently returned noise.",
+          SMALL),
+
         P("Relevance: swap overlap alone is not sufficient", H2),
         P("Swap overlap measures whether a system is <i>sensitive</i> to binding, not whether it is "
           "<i>right</i>. A retriever returning five random images would score a perfect 0.00. "
@@ -381,6 +394,19 @@ def build():
 
         P("8. Codebase", H1),
         P(f'<link href="{GITHUB_URL}" color="blue">{GITHUB_URL}</link>'),
+        Spacer(1, 3),
+        P("Part B entrypoint — accepts a natural-language string, returns the top-k images:"),
+        P("<font face='Courier' size='8'>"
+          "python query.py \"A red tie and a white shirt in a formal setting.\" --k 5<br/>"
+          "python query.py \"a burnt sienna windbreaker\" --show<br/>"
+          "python query.py \"a blue shirt in a park\" --backbone vanilla-clip --no-regions"
+          "</font>", CODE),
+        P("It prints the clause decomposition alongside the ranked results, so the routing "
+          "decisions are inspectable. The <font face='Courier' size='8'>--backbone</font> / "
+          "<font face='Courier' size='8'>--no-regions</font> flags make the ablation in §5 "
+          "reproducible from the command line: run the same query through vanilla CLIP and through "
+          "the region system and compare.", SMALL),
+        Spacer(1, 3),
         P("<font face='Courier' size='8'>data/</font> corpus construction + audits &nbsp;·&nbsp; "
           "<font face='Courier' size='8'>indexer/</font> Part A: encoders, crops, vector storage "
           "&nbsp;·&nbsp; <font face='Courier' size='8'>retriever/</font> Part B: decomposition, "
