@@ -131,6 +131,45 @@ So the headline metric is **colour-swap overlap**, which needs no labels:
 self-supervised (no ground truth needed). It measures *sensitivity to binding* —
 precisely the property the brief's hint calls out.
 
+### Results
+
+| Configuration | Swap overlap ↓ |
+|---|---|
+| vanilla CLIP (global only) | 0.65 |
+| FashionSigLIP (global only) | 0.50 |
+| **FashionSigLIP + regions** | **0.30** |
+
+The backbone swap buys 0.65 → 0.50; **the mechanism buys 0.50 → 0.30**. The gain
+is attributable to the architecture, not to a fancier model.
+
+**But swap overlap alone is not sufficient** — it measures whether a system is
+*sensitive* to binding, not whether it is *right*. Random retrieval scores a
+perfect 0.00. So relevance was checked by inspecting the top-5 for each graded
+query (contact sheets in `eval/`):
+
+| Graded query | Ours | Vanilla CLIP |
+|---|---|---|
+| 1. A person in a bright yellow raincoat | 2/5 | 1/5 |
+| 2. Professional business attire inside a modern office | 4/5 | 2/5 |
+| 3. Someone wearing a blue shirt sitting on a park bench | 3/5 | 1/5 |
+| 4. Casual weekend outfit for a city walk | 5/5 | 4/5 |
+| 5. A red tie and a white shirt in a formal setting | **5/5** | **0/5** |
+| **Precision@5** | **0.76** | **0.32** |
+
+Relevance moves the same way as binding, so the region system is not merely
+*different* from CLIP — it is better.
+
+The compositional query is the clearest case. Vanilla CLIP returns **zero red
+ties**: a white bow tie, an olive tie, a striped tie, a black bow tie, and — the
+diagnostic case — **a white tie on a gold shirt**. The colour-swapped image is
+retrieved as a top match, because a pooled vector registers `{red, white, tie,
+shirt}` without binding. See `eval/comparison_compositional.png`.
+
+Honest caveats: P@5 was judged by the author on 25 image-query pairs
+(non-blind, small); the swap metric averages only 4 pairs; and query 1 is the
+weakest at 2/5 because Fashionpedia has no `raincoat` category, so "raincoat"
+degrades to "yellow garment".
+
 ## Scalability to 1M images
 
 Candidate generation is an ANN lookup in ChromaDB over the whole corpus; only the

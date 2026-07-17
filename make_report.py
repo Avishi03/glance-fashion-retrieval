@@ -13,7 +13,7 @@ from reportlab.platypus import (Image, ListFlowable, ListItem, PageBreak,
                                 TableStyle)
 
 ROOT = Path(__file__).resolve().parent
-GITHUB_URL = "https://github.com/&lt;your-username&gt;/glance-fashion-retrieval"
+GITHUB_URL = "https://github.com/Avishi03/glance-fashion-retrieval"
 
 ss = getSampleStyleSheet()
 H1 = ParagraphStyle("H1", parent=ss["Heading1"], fontSize=16, spaceBefore=14,
@@ -264,13 +264,48 @@ def build():
           "model. Zero-shot decomposition routes correctly with no vocabulary — 'A red tie' → "
           "garment, 'a white shirt' → garment, 'in a formal setting' → scene."),
 
+        P("Relevance: swap overlap alone is not sufficient", H2),
+        P("Swap overlap measures whether a system is <i>sensitive</i> to binding, not whether it is "
+          "<i>right</i>. A retriever returning five random images would score a perfect 0.00. "
+          "Adding region vectors adds noise, and noise also lowers overlap — so the result above is "
+          "consistent with better binding <i>and</i> with simply being noisier. The two must be "
+          "disentangled, and the only way to do that here is to look at the output: the corpus "
+          "ships no colour or scene labels to score against. This is the same wall LookSync hit, "
+          "and they answered it the same way — human judgement."),
+        P("Precision@5, judged by inspection of the top-5 for each graded query "
+          "(contact sheets for both systems are in the repo under <font face='Courier' size='8'>"
+          "eval/</font>):", SMALL),
+        table([
+            ["Graded query", "Ours", "Vanilla CLIP"],
+            ["1. A person in a bright yellow raincoat", "2/5", "1/5"],
+            ["2. Professional business attire inside a modern office", "4/5", "2/5"],
+            ["3. Someone wearing a blue shirt sitting on a park bench", "3/5", "1/5"],
+            ["4. Casual weekend outfit for a city walk", "5/5", "4/5"],
+            ["5. A red tie and a white shirt in a formal setting", "5/5", "0/5"],
+            ["Precision@5", "0.76", "0.32"],
+        ], [92 * mm, 22 * mm, 26 * mm]),
+        Spacer(1, 5),
+        P("So relevance moves the same way as binding: the region system is not merely different "
+          "from CLIP, it is better. The compositional query is the clearest case — and it is worth "
+          "seeing rather than reading:"),
+        Spacer(1, 3),
+        Image(str(ROOT / "eval" / "comparison_compositional.png"), width=168 * mm, height=97 * mm),
+        Spacer(1, 3),
+        P("Vanilla CLIP returns <b>zero red ties</b>: a white bow tie, an olive tie, a striped tie, "
+          "a black bow tie, and — the diagnostic case — <b>a white tie on a gold shirt</b>. The "
+          "colour-swapped image is retrieved as a top match, because a pooled vector registers "
+          "{red, white, tie, shirt} without binding. This is the brief's hint, reproduced exactly.",
+          SMALL),
+
         P("Known limitations", H2),
         bullets([
-            "<b>Query 4 fails to decompose.</b> 'Casual weekend outfit for a city walk' routes as "
-            "a single garment clause — the syntactic splitter has no rule for 'for a…', so 'city "
-            "walk' never reaches the scene vector and results skew editorial rather than street. "
-            "An LLM decomposer (LookSync's actual choice) would handle this; the syntactic splitter "
-            "is the deliberate trade for zero API dependency.",
+            "<b>Query 1 is the weakest (2/5).</b> Fashionpedia has no 'raincoat' category — only "
+            "coat/jacket/cape — so 'raincoat' degrades to 'yellow garment' and the results drift to "
+            "yellow tops and an orange dress. The top hit is a genuine yellow raincoat; the tail is "
+            "not. A vocabulary gap in the corpus, not in the model.",
+            "<b>Precision@5 was judged by the author, on 25 image-query pairs.</b> That is a "
+            "small, non-blind sample. LookSync used a panel and reported MOS with the same caveat; "
+            "at production scale this needs multiple raters and a held-out set.",
             "<b>4 swap pairs is a small sample.</b> The ordering is consistent and the gap is "
             "wide, but the absolute values carry meaningful variance.",
             "<b>Greedy assignment, not Hungarian.</b> Optimal for ≤5 clauses in practice, but not "
@@ -278,6 +313,10 @@ def build():
             "<b>Region boxes come from annotations.</b> At 1M images this needs a detector "
             "(LookSync uses SAM v2 + Florence as its fallback path), which introduces "
             "detector error the current numbers do not include.",
+            "<b>Query 4 does not decompose</b> — 'Casual weekend outfit for a city walk' routes as "
+            "a single garment clause, since the splitter has no rule for 'for a…'. It scores 5/5 "
+            "anyway, because the whole-query prior still carries the city context. Worth noting as "
+            "luck rather than design: the fallback path saved it.",
         ], SMALL),
     ]
 
