@@ -9,3 +9,10 @@ data/crops/
 *.npy
 
 # Model weights / HF cache live outside the repo (D:\hf-cache)
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.synctex.gz
+report.pdf
