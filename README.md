@@ -153,8 +153,8 @@ query (contact sheets in `eval/`):
 | 2. Professional business attire inside a modern office | 4/5 | 2/5 |
 | 3. Someone wearing a blue shirt sitting on a park bench | 3/5 | 1/5 |
 | 4. Casual weekend outfit for a city walk | 5/5 | 4/5 |
-| 5. A red tie and a white shirt in a formal setting | **5/5** | **0/5** |
-| **Precision@5** | **0.76** | **0.32** |
+| 5. A red tie and a white shirt in a formal setting | **4/5** | **0/5** |
+| **Precision@5** | **0.72** | **0.32** |
 
 Relevance moves the same way as binding, so the region system is not merely
 *different* from CLIP — it is better.
@@ -165,10 +165,13 @@ diagnostic case — **a white tie on a gold shirt**. The colour-swapped image is
 retrieved as a top match, because a pooled vector registers `{red, white, tie,
 shirt}` without binding. See `eval/comparison_compositional.png`.
 
-Honest caveats: P@5 was judged by the author on 25 image-query pairs
-(non-blind, small); the swap metric averages only 4 pairs; and query 1 is the
-weakest at 2/5 because Fashionpedia has no `raincoat` category, so "raincoat"
-degrades to "yellow garment".
+Honest caveats: P@5 was judged by hand on 25 image-query pairs (non-blind,
+small), and scores move with rubric strictness — query 5 is scored 4/5, with one
+clear miss (a red-and-white *striped* tie over a light blue shirt) and two
+borderline results; read strictly it is 2/5. The gap survives every rubric,
+because vanilla CLIP returns **zero** red ties under any reading. The swap metric
+averages only 4 pairs, and query 1 is the weakest at 2/5 because Fashionpedia has
+no `raincoat` category, so "raincoat" degrades to "yellow garment".
 
 ## Scalability to 1M images
 
