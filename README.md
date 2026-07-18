@@ -239,3 +239,5 @@ indexer/    Part A: encoders, region crops, vector storage
 retriever/  Part B: decomposition, routing, assignment, fusion
 eval/       graded queries + compositional stress test
 ```
+
+Author- Avishi Agrawal
