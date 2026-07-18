@@ -56,15 +56,15 @@ Every design decision below exists to fix attribute binding.
 \addlinespace
 \textbf{B.} Domain-tuned backbone
 & One-line change; large gain on garment vocabulary and texture/fabric terms. Always worth doing.
-& Still a dual encoder --- still pools the frame, so binding is unfixed. Domain shift if the corpus is not catalogue-like. \\
+& Still a dual encoder - still pools the frame, so binding is unfixed. Domain shift if the corpus is not catalogue-like. \\
 \addlinespace
 \textbf{C.} Region multi-vector \emph{(chosen)}
 & Directly attacks binding: a shirt crop contains only the shirt, so ``red'' cannot bind elsewhere. Still zero-shot.
-& Index grows ${\sim}3\text{--}4\times$. Needs boxes --- annotations here, a detector at scale. Crops lose global context. \\
+& Index grows ${\sim}3\text{-}4\times$. Needs boxes - annotations here, a detector at scale. Crops lose global context. \\
 \addlinespace
 \textbf{D.} Cross-encoder rerank
 & Cross-attention resolves binding properly. Cheap if confined to a top-$k$ shortlist ($k{\approx}50$).
-& Orders of magnitude slower per pair --- cannot touch the full corpus. Latency scales with $k$. \\
+& Orders of magnitude slower per pair - cannot touch the full corpus. Latency scales with $k$. \\
 \addlinespace
 \textbf{E.} Fine-tune with hard negatives
 & Best ceiling; pushes binding into the vector so retrieval stays a single ANN lookup.
@@ -75,7 +75,7 @@ Every design decision below exists to fix attribute binding.
 \vspace{3mm}
 \textbf{Chosen: B + C}, with D scoped as the next increment. B is free. C is where the
 brief's stated failure mode actually lives. D is deliberately deferred rather than
-dropped --- it is the strongest precision lever left, and the shortlist architecture
+dropped - it is the strongest precision lever left, and the shortlist architecture
 already accepts it. E is out of reach: the dataset ships no attribute labels to train on.
 
 %======================================================================
@@ -88,11 +88,11 @@ retrieval $\rightarrow$ rerank. The same four stages, adapted from \emph{product
 retrieval given an AI-generated look} to \emph{scene retrieval given natural language}.
 
 {\small\itshape LookSync's own bake-off put vanilla CLIP ViT-H/14 above FashionCLIP and
-Fashion-SigLIP by 3--7\% MOS --- on catalogue product retrieval. That result did not
+Fashion-SigLIP by 3-7\% MOS - on catalogue product retrieval. That result did not
 transfer here, which is why the backbone was chosen by measurement rather than
 assumption (\S5).}
 
-\subsection{Part A --- Indexer}
+\subsection{Part A - Indexer}
 
 Two vector kinds per image:
 
@@ -108,23 +108,23 @@ Two vector kinds per image:
 \end{center}
 
 Region boxes are filtered to the 27 real garment/accessory categories. \textbf{46\% of
-Fashionpedia's boxes are parts} --- sleeve, neckline, zipper, rivet --- and a crop of a
+Fashionpedia's boxes are parts} - sleeve, neckline, zipper, rivet - and a crop of a
 zipper is index noise. There is deliberately no third ``scene vector'': with a single
 backbone that is just the global vector under another name. Storage is \textbf{ChromaDB},
 per the brief's instruction to pick a convenient store rather than build one; the ML
 logic is in \emph{what} is embedded, not the store.
 
-\subsection{Part B --- Retriever}
+\subsection{Part B - Retriever}
 
 \textbf{Decomposition is zero-shot by construction.} The brief grades handling of
 ``descriptions it hasn't seen explicitly in a training label'', which rules out the
 obvious implementation. A parser with a hardcoded colour list and garment taxonomy
-passes all five graded queries and silently drops any term outside its vocabulary ---
+passes all five graded queries and silently drops any term outside its vocabulary -
 closed-vocabulary retrieval wearing a zero-shot costume. So no colours or garments are
 ever enumerated:
 
 \begin{itemize}
-  \item \textbf{Split} on conjunctions and commas --- purely syntactic, no word list.
+  \item \textbf{Split} on conjunctions and commas - purely syntactic, no word list.
   \item \textbf{Route} each clause by comparing it against \emph{anchor prompts}
         describing what a garment is versus what a place is, using the text encoder
         itself. The encoder knows ``windbreaker'' even though we never wrote it down.
@@ -135,7 +135,7 @@ ever enumerated:
 \textbf{Binding via one-to-one assignment.} Region scoring alone is \emph{not} enough,
 and this is the subtle part. If each clause independently takes its best-matching
 region, then for an image with a \textbf{red shirt} and a \textbf{white tie}, the clause
-``a red tie'' happily matches the red \emph{shirt} crop --- colour similarity dominates
+``a red tie'' happily matches the red \emph{shirt} crop - colour similarity dominates
 garment identity, the swapped image still scores well, and nothing has been fixed.
 
 Instead garment clauses are assigned to regions \textbf{one-to-one}, greedily by
@@ -145,9 +145,9 @@ shirt satisfies both clauses with two different crops; the colour-swapped image
 satisfies neither well. This needs no category lookup, so it remains open-vocabulary.
 
 {\small Fusion z-normalises per clause. Raw scores are not comparable across clauses or
-backbones --- SigLIP's pairwise sigmoid loss puts its cosines on a completely different
+backbones - SigLIP's pairwise sigmoid loss puts its cosines on a completely different
 scale from CLIP's InfoNCE (a random image scores $+0.18$ under CLIP, $-0.05$ under
-SigLIP) --- so absolute thresholds would be meaningless.}
+SigLIP) - so absolute thresholds would be meaningless.}
 
 %======================================================================
 \section{Dataset: built, not sampled}
@@ -155,21 +155,21 @@ SigLIP) --- so absolute thresholds would be meaningless.}
 \textbf{1{,}788 images} = 1{,}200 Fashionpedia + 588 COCO. Two audits drove this, and
 both changed the design.
 
-\subsection{Audit 1 --- Fashionpedia's distribution starves the graded queries}
+\subsection{Audit 1 - Fashionpedia's distribution starves the graded queries}
 
-\textbf{\texttt{tie} appears in 3 of 1{,}158 val images.} The compositional query ---
-the one the entire architecture exists to win --- would have had essentially no ground
+\textbf{\texttt{tie} appears in 3 of 1{,}158 val images.} The compositional query -
+the one the entire architecture exists to win - would have had essentially no ground
 truth. Train is $39\times$ larger and holds 1{,}455 tie images and 1{,}402 tie+shirt
 images, so the corpus is \textbf{stratified from train with a quota per graded query}
 (200 tie+shirt, 200 formal, 180 outerwear, 160 shirt, 200 casual, 260 random
 distractors), filled rarest-first so a tie+shirt image is never consumed by the
 distractor bucket.
 
-\subsection{Audit 2 --- Fashionpedia cannot serve the environment axis}
+\subsection{Audit 2 - Fashionpedia cannot serve the environment axis}
 
 Zero-shot scene tagging found it is \textbf{85\% red carpet, runway and studio}. The
-four environments the brief requires total \textbf{14.2\%} --- 19 office images and 4
-home images out of 1{,}200 --- while three of the five graded queries are
+four environments the brief requires total \textbf{14.2\%} - 19 office images and 4
+home images out of 1{,}200 - while three of the five graded queries are
 environment-driven.
 
 \begin{center}\small
@@ -187,7 +187,7 @@ urban street / park / office / home & \textbf{14.2\%} $\leftarrow$ the required 
 
 COCO fixes that, and does one thing a generic scene dataset could not: \textbf{its object
 labels give scene ground truth that is not derived from CLIP}. A \texttt{bench} box is a
-human annotation, so grading a CLIP retriever against it is not circular --- which
+human annotation, so grading a CLIP retriever against it is not circular - which
 CLIP-generated scene tags could never be. Scene is inferred from co-present objects with
 \texttt{person} always required: office $\leftarrow$ laptop/keyboard/mouse (89), home
 $\leftarrow$ couch/bed/tv (175), park $\leftarrow$ bench (149), street $\leftarrow$
@@ -256,7 +256,7 @@ terms and silently returned noise.
 
 Swap overlap measures whether a system is \emph{sensitive} to binding, not whether it is
 \emph{right}. A retriever returning five random images would score a perfect 0.00.
-Adding region vectors adds noise, and noise also lowers overlap --- so the result above
+Adding region vectors adds noise, and noise also lowers overlap - so the result above
 is consistent with better binding \emph{and} with simply being noisier. The two must be
 disentangled, and the only way to do that here is to look at the output.
 
@@ -269,19 +269,19 @@ systems are in the repo under \texttt{eval/}):
 \toprule
 \textbf{Graded query} & \textbf{Ours} & \textbf{Vanilla CLIP} \\
 \midrule
-1. A person in a bright yellow raincoat & 2/5 & 1/5 \\
+1. A person in a bright yellow raincoat & 1/5 & 1/5 \\
 2. Professional business attire inside a modern office & 4/5 & 2/5 \\
-3. Someone wearing a blue shirt sitting on a park bench & 3/5 & 1/5 \\
+3. Someone wearing a blue shirt sitting on a park bench & 2/5 & 1/5 \\
 4. Casual weekend outfit for a city walk & 5/5 & 4/5 \\
 5. A red tie and a white shirt in a formal setting & \textbf{4/5} & \textbf{0/5} \\
 \midrule
-\textbf{Precision@5} & \textbf{0.72} & \textbf{0.32} \\
+\textbf{Precision@5} & \textbf{0.64} & \textbf{0.32} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 Relevance moves the same way as binding: the region system is not merely \emph{different}
-from CLIP, it is better --- and by a wider margin on the compositional query than
+from CLIP, it is better - and by a wider margin on the compositional query than
 anywhere else, which is exactly where the architecture was aimed. It is worth seeing
 rather than reading:
 
@@ -292,7 +292,7 @@ rather than reading:
 
 \vspace{-3mm}
 {\small Vanilla CLIP returns \textbf{zero red ties}: a white bow tie, an olive tie, a
-striped tie, a black bow tie, and --- the diagnostic case --- \textbf{a white tie on a
+striped tie, a black bow tie, and - the diagnostic case - \textbf{a white tie on a
 gold shirt}. The colour-swapped image is retrieved as a top match, because a pooled
 vector registers \{red, white, tie, shirt\} without binding. This is the brief's hint,
 reproduced exactly.}
@@ -300,10 +300,10 @@ reproduced exactly.}
 \subsection{Known limitations}
 
 \begin{itemize}\small
-  \item \textbf{Query 1 is the weakest (2/5).} Fashionpedia has no \texttt{raincoat}
-        category --- only coat/jacket/cape --- so ``raincoat'' degrades to ``yellow
-        garment'' and the tail drifts to yellow tops and an orange dress. A vocabulary
-        gap in the corpus, not in the model.
+  \item \textbf{Query 1 is the weakest (1/5).} Fashionpedia has no \texttt{raincoat}
+        category, only coat/jacket/cape, so only one true raincoat surfaces and
+        ``raincoat'' otherwise degrades to ``yellow garment'': the tail is yellow tops
+        and an orange dress. A vocabulary gap in the corpus, not in the model.
   \item \textbf{Precision@5 was judged by the author on 25 image-query pairs.} Small and
         non-blind. Scores move with rubric strictness, and honestly so: query 5 is scored
         4/5, with one clear miss (a red-and-white \emph{striped} tie over a light blue
@@ -319,7 +319,7 @@ reproduced exactly.}
   \item \textbf{Region boxes come from annotations.} At 1M images this needs a detector
         (LookSync uses SAM v2 + Florence as its fallback path), introducing detector
         error the current numbers exclude.
-  \item \textbf{Query 4 does not decompose} --- ``Casual weekend outfit for a city walk''
+  \item \textbf{Query 4 does not decompose} - ``Casual weekend outfit for a city walk''
         routes as a single garment clause, since the splitter has no rule for
         ``for a\ldots''. It scores 5/5 anyway because the whole-query prior still
         carries the city context: the fallback path saved it, which is luck, not design.
@@ -335,7 +335,7 @@ is unchanged at 1M images. Three real costs:
 \begin{itemize}
   \item \textbf{Index size grows ${\sim}3.4\times$} (6{,}036 vectors for 1{,}788 images).
         At 1M images that is ${\sim}3.4$M vectors $\times$ 768 dims $\times$ 4 bytes
-        $\approx$ 10\,GB --- past comfortable RAM. Fix: product quantisation, or index
+        $\approx$ 10\,GB - past comfortable RAM. Fix: product quantisation, or index
         regions only for garment-bearing images.
   \item \textbf{Dense scoring is $O(\text{candidates} \times \text{clauses} \times
         \text{regions})$}, but candidates are capped at ${\sim}150$/clause, so this is
@@ -357,7 +357,7 @@ vector}, so location and weather are a third clause role rather than a redesign.
 \begin{itemize}
   \item \textbf{Add a role, not a model.} Extend the anchor set with ``a city or
         geographic location'' and ``the weather or time of day''. Routing is
-        similarity-based, so this is additive --- no retraining, no vocabulary.
+        similarity-based, so this is additive - no retraining, no vocabulary.
   \item \textbf{Cheap metadata first.} EXIF GPS and capture time give city and season for
         free where present; both become Chroma metadata filters, which cut the candidate
         set \emph{before} any vector work and so cost nothing at query time.
@@ -365,7 +365,7 @@ vector}, so location and weather are a third clause role rather than a redesign.
         (StreetCLIP was trained for exactly this) tags city/region; weather is well
         within zero-shot CLIP (``an overcast day'', ``a rain-soaked street''). Store as a
         fourth vector kind plus metadata.
-  \item \textbf{Weather is a garment prior, not just a filter} --- the commercially
+  \item \textbf{Weather is a garment prior, not just a filter} - the commercially
         interesting part. ``What to wear in Bangalore in July'' is a monsoon query: it
         should surface raincoats and closed shoes. That is a learned correlation between
         weather and garment category, not a retrieval constraint, and it is where a
@@ -381,7 +381,7 @@ vector}, so location and weather are a third clause role rather than a redesign.
         the architecture already produces that shortlist. This is the first thing I would
         build next.
   \item \textbf{Hard-negative mining.} Colour-swapped and garment-swapped negatives are
-        exactly what the swap metric measures --- mine them automatically from the corpus
+        exactly what the swap metric measures - mine them automatically from the corpus
         and fine-tune (approach E). This pushes binding into the embedding so it survives
         at ANN time instead of being reconstructed at scoring time.
   \item \textbf{Replace the syntactic splitter with an LLM decomposer}, as LookSync does.
@@ -391,7 +391,7 @@ vector}, so location and weather are a third clause role rather than a redesign.
   \item \textbf{Learn the fusion weights.} \texttt{W\_PRIOR} and the clause weights are
         hand-set. With even a few hundred judged pairs they should be fit, not guessed.
   \item \textbf{Detector-based regions.} Removes the annotation dependency and lets region
-        scoring work on arbitrary images --- required to run on real traffic.
+        scoring work on arbitrary images - required to run on real traffic.
 \end{itemize}
 
 %======================================================================
@@ -401,7 +401,7 @@ vector}, so location and weather are a third clause role rather than a redesign.
 \href{https://github.com/Avishi03/glance-fashion-retrieval}{\texttt{github.com/Avishi03/glance-fashion-retrieval}}
 \end{center}
 
-Part B entrypoint --- accepts a natural-language string, returns the top-$k$ images:
+Part B entrypoint - accepts a natural-language string, returns the top-$k$ images:
 
 \begin{quote}\small
 \texttt{python query.py "A red tie and a white shirt in a formal setting." -{}-k 5}\\
