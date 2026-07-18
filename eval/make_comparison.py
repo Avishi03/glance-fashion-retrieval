@@ -23,7 +23,7 @@ K = 5
 
 ROWS = [
     ("vanilla CLIP (global only)  -  0/5 red ties", "vanilla-clip", False),
-    ("FashionSigLIP + regions (ours)  -  5/5", "fashion-siglip", True),
+    ("FashionSigLIP + regions (ours)  -  4/5", "fashion-siglip", True),
 ]
 
 
